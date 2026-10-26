@@ -38,6 +38,16 @@ def test_model_cannot_fabricate_scope():
     assert not check_edge(a.claims[0], edge, {p.passage_id: p for p in a.passages}).comparable
 
 
+def test_claim_facets_cannot_disagree_with_displayed_claim():
+    from decimal import Decimal
+    a, _ = sample_case()
+    claim = a.claims[0].model_copy(deep=True)
+    claim.facets.value = Decimal(320)
+    checked = check_edge(claim, a.edges[1].edge, {p.passage_id: p for p in a.passages})
+    assert not checked.comparable
+    assert any("Claim quantity" in reason for reason in checked.reasons)
+
+
 def test_whitespace_only_normalization():
     assert normalize_quote("a\n b\t500") == "a b 500"
     a, _ = sample_case()

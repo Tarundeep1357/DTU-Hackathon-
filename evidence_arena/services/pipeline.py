@@ -55,7 +55,7 @@ def run_analysis(question, sources, passages, settings: Settings, *, claims=None
     progress(35, "Gemma 4 is reviewing candidate evidence")
     if sum(len(p["text"]) for bundle in bundles for p in bundle["passages"]) > 24000:
         raise ModelError("Candidate evidence exceeds the local model context budget; narrow the question or documents")
-    response = client.generate(EvidenceResponse, "Classify supplied candidate passages for each claim. Include supporting and opposing evidence when present. Provide exact quotes and grounded facets. Return gaps for unresolved questions with two outcome branches. Do not issue verdicts.",
+    response = client.generate(EvidenceResponse, "Classify supplied candidate passages for each claim. Return at most 3 material evidence edges per claim; include both supporting and opposing evidence when present, and at most one context edge. Skip irrelevant passages. Copy a concise exact quotation that contains all comparison facts. Provide grounded facets. Set gaps to an empty array: the application will generate discriminating tests from the validated claims. Do not issue verdicts.",
                                {"question": question, "bundles": bundles, "gap_guidance": TEMPLATES.get(domain, {}).get("gap_prompt", "")}, max_tokens=6500)
     lookup, claim_lookup = {p.passage_id: p for p in passages}, {c.claim_id: c for c in claims}
     checked = []

@@ -41,6 +41,7 @@ The installed system Ollama was too old for Gemma 4. `deploy/extract_cpu_runtime
 .\.venv\Scripts\python.exe deploy\extract_cpu_runtime.py
 # Start the local runtime via start.ps1, or serve it with OLLAMA_HOST and OLLAMA_MODELS set.
 .\.venv\Scripts\python.exe deploy\pull_model.py
+.\.venv\Scripts\python.exe deploy\import_local_model.py  # Recovery if metadata redirects fail after the weights download
 .\.venv\Scripts\python.exe -m evidence_arena.cli smoke
 ```
 

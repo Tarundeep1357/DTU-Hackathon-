@@ -25,7 +25,6 @@ header[data-testid='stHeader'] {background:rgba(250,250,250,.92);}
 [data-testid='stSidebar'] [data-testid='stRadio'] label {padding:.42rem .55rem;border-radius:5px;}
 [data-testid='stSidebar'] [data-testid='stRadio'] label:has(input:checked) {background:#2D4653;}
 [data-testid='stSidebar'] [data-testid='stRadio'] [role='radiogroup'] {gap:2px;}
-[data-testid='stSidebar'] [data-testid='stRadio'] label div:first-child {display:none;}
 button:focus-visible, input:focus-visible, textarea:focus-visible {outline:2px solid #235B76 !important; outline-offset:3px;}
 div[data-testid='stMetric'] {border-bottom: 2px solid #B9CCD5; padding: .3rem 0 .8rem;}
 div[data-testid='stMetricValue'] {font-size:2rem; font-weight:600;}

@@ -58,7 +58,9 @@ class GemmaClient:
                     response = client.post(f"{self.settings.gemma_base_url}/chat/completions",
                         headers={"Authorization": f"Bearer {self.settings.gemma_api_key or 'local'}"},
                         json={"model": self.settings.gemma_model_id, "temperature": 0, "max_tokens": max_tokens,
-                              "response_format": {"type": "json_object"}, "stream": False,
+                              "response_format": {"type": "json_schema", "json_schema": {
+                                  "name": contract.__name__, "strict": True, "schema": contract.model_json_schema()}},
+                              "reasoning_effort": "none", "stream": False,
                               "messages": [{"role": "system", "content": SYSTEM},
                                            {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)}]})
                     response.raise_for_status()
