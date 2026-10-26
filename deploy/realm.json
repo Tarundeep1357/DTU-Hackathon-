@@ -1,0 +1,21 @@
+{
+  "realm": "evidence",
+  "enabled": true,
+  "displayName": "Evidence Arena development",
+  "registrationAllowed": true,
+  "sslRequired": "none",
+  "clients": [{
+    "clientId": "evidence-arena",
+    "name": "Evidence Arena local development",
+    "enabled": true,
+    "protocol": "openid-connect",
+    "publicClient": false,
+    "secret": "development-only-replace-before-sharing",
+    "standardFlowEnabled": true,
+    "directAccessGrantsEnabled": false,
+    "redirectUris": ["http://localhost:8501/oauth2callback"],
+    "webOrigins": ["http://localhost:8501"],
+    "defaultClientScopes": ["profile", "email", "roles"]
+  }]
+}
+

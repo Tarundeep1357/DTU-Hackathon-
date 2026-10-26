@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-10-26T08:04:33.691671+00:00",
+  "benchmark": "Deterministic rules and prepared proposals; not live model accuracy",
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "false_conflict_count": 0,
+  "invalid_citations_promoted": 0,
+  "cases": [
+    {
+      "id": "support",
+      "expected": "Supported",
+      "actual": "Supported",
+      "passed": true
+    },
+    {
+      "id": "opposition",
+      "expected": "Contradicted",
+      "actual": "Contradicted",
+      "passed": true
+    },
+    {
+      "id": "different_period",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "different_unit",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "different_site",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "different_metric",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "projection",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "altered_quote",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "unknown_passage",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "no_evidence",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    },
+    {
+      "id": "meal_C1",
+      "expected": "Contested",
+      "actual": "Contested",
+      "passed": true
+    },
+    {
+      "id": "meal_C2",
+      "expected": "Unverified",
+      "actual": "Unverified",
+      "passed": true
+    }
+  ]
+}

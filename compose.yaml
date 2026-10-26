@@ -1,0 +1,79 @@
+services:
+  db:
+    image: postgres:17.7-bookworm
+    environment:
+      POSTGRES_DB: arena
+      POSTGRES_USER: arena
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arena -d arena"]
+      interval: 5s
+      retries: 15
+  migrate:
+    build: .
+    environment: &app-env
+      EA_DATABASE_URL: postgresql+psycopg://arena:${POSTGRES_PASSWORD}@db:5432/arena
+      EA_STORAGE_DIR: /app/data/sources
+      GEMMA_BASE_URL: ${GEMMA_BASE_URL:-http://host.docker.internal:11435/v1}
+      GEMMA_MODEL_ID: ${GEMMA_MODEL_ID:-gemma4:e2b-it-qat}
+      GEMMA_API_KEY: ${GEMMA_API_KEY:-local}
+      GEMMA_REMOTE: ${GEMMA_REMOTE:-false}
+      GEMMA_TIMEOUT_SECONDS: ${GEMMA_TIMEOUT_SECONDS:-120}
+      GEMMA_PRIVACY_URL: ${GEMMA_PRIVACY_URL:-}
+      EA_ADMIN_IDENTITIES: ${EA_ADMIN_IDENTITIES:-}
+    volumes:
+      - arena-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "-m", "evidence_arena.cli", "migrate"]
+  app:
+    build: .
+    environment: *app-env
+    ports:
+      - "127.0.0.1:8501:8501"
+    volumes:
+      - arena-data:/app/data
+      - ./.streamlit/secrets.toml:/app/.streamlit/secrets.toml:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  worker:
+    build: .
+    environment: *app-env
+    command: ["python", "-m", "evidence_arena.worker"]
+    healthcheck:
+      disable: true
+    volumes:
+      - arena-data:/app/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.2
+    profiles: ["oidc-dev"]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_HOSTNAME: http://keycloak.localhost:8080
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./deploy/realm.json:/opt/keycloak/data/import/realm.json:ro
+      - keycloak-data:/opt/keycloak/data
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+volumes:
+  postgres-data:
+  arena-data:
+  keycloak-data:
+
