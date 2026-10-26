@@ -6,5 +6,8 @@ data
 __pycache__
 .pytest_cache
 test-results
+frontend/node_modules
+frontend/dist
+.remote-check
 dd.docx
 

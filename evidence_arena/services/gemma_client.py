@@ -88,11 +88,14 @@ class GemmaClient:
 
     def smoke(self):
         from pydantic import BaseModel, ConfigDict
-        from typing import Literal
-        class Hello(BaseModel):
+        class GroundedProbe(BaseModel):
             model_config = ConfigDict(extra="forbid")
-            ready: Literal[True]
-        self.generate(Hello, 'Return {"ready":true}.', {}, max_tokens=64)
+            meal_count: int
+            site: str
+        probe=self.generate(GroundedProbe,"Extract the meal count and site from this source sentence. Return meal_count as an integer and site as the exact site name.",
+                            {"source_sentence":"Kitchen A served 500 meals."},max_tokens=100)
+        if probe.meal_count!=500 or probe.site.strip()!="Kitchen A":
+            raise ModelError("Gemma responded, but failed the grounded factual probe; model quality is not verified")
         return {"ready": True, "model": self.settings.gemma_model_id,
-                "endpoint": self.settings.gemma_base_url, "verified": "Structured Gemma 4 inference completed"}
+                "endpoint": self.settings.gemma_base_url, "verified": "Gemma 4 passed structured output and grounded factual extraction"}
 

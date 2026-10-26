@@ -63,6 +63,13 @@ def test_prompt_injection_is_delimited_data_without_tools(environment):
 
 def test_valid_smoke(environment):
     _, s = environment
-    transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"model": s.gemma_model_id, "choices": [{"message": {"content": '{"ready":true}'}}]}))
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"model": s.gemma_model_id, "choices": [{"message": {"content": '{"meal_count":500,"site":"Kitchen A"}'}}]}))
     assert GemmaClient(s, transport=transport).smoke()["ready"]
+
+
+def test_smoke_rejects_semantically_wrong_json(environment):
+    _,s=environment
+    transport=httpx.MockTransport(lambda request:httpx.Response(200,json={"model":s.gemma_model_id,"choices":[{"message":{"content":'{"meal_count":2,"site":"Kitchen B"}'}}]}))
+    with pytest.raises(ModelError,match="factual probe"):
+        GemmaClient(s,transport=transport).smoke()
 

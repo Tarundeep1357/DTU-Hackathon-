@@ -1,0 +1,19 @@
+{
+  "model_smoke": {
+    "ready": true,
+    "model": "gemma4:e2b-q2-local",
+    "endpoint": "http://127.0.0.1:11435/v1",
+    "verified": "Structured Gemma 4 inference completed"
+  },
+  "live_verdicts": {
+    "t": "Unverified"
+  },
+  "valid_citations": 0,
+  "rejected_citations": 0,
+  "gaps": 1,
+  "cross_user_access_blocked": true,
+  "packet_bytes": 3771,
+  "case_roundtrip": true,
+  "export_json_valid": true,
+  "elapsed_seconds": 281.36
+}

@@ -13,8 +13,8 @@
     "secret": "development-only-replace-before-sharing",
     "standardFlowEnabled": true,
     "directAccessGrantsEnabled": false,
-    "redirectUris": ["http://localhost:8501/oauth2callback"],
-    "webOrigins": ["http://localhost:8501"],
+    "redirectUris": ["http://localhost:8501/oauth2callback", "http://127.0.0.1:8501/auth/callback", "http://localhost:8501/auth/callback", "http://127.0.0.1:5173/auth/callback"],
+    "webOrigins": ["http://localhost:8501", "http://127.0.0.1:8501", "http://127.0.0.1:5173"],
     "defaultClientScopes": ["profile", "email", "roles"]
   }]
 }

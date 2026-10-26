@@ -69,8 +69,8 @@ class Passage(Contract):
 
 
 class Claim(Contract):
-    claim_id: str
-    text: str = Field(min_length=3, max_length=1500)
+    claim_id: str = Field(pattern=r"^C[1-9][0-9]*$")
+    text: str = Field(min_length=10, max_length=1500)
     facets: Facets = Field(default_factory=Facets)
 
 
@@ -143,6 +143,17 @@ class ClaimResponse(Contract):
 class EvidenceResponse(Contract):
     evidence: list[EvidenceEdge] = Field(max_length=240)
     gaps: list[GapTest] = Field(default_factory=list, max_length=20)
+
+
+class EvidenceProposal(Contract):
+    claim_id: str
+    passage_id: str
+    relation: Literal["supports", "contradicts", "context"]
+    quote: str = Field(min_length=1,max_length=3000)
+
+
+class ProposalResponse(Contract):
+    evidence: list[EvidenceProposal] = Field(max_length=60)
 
 
 class ReviewAnnotation(Contract):

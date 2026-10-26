@@ -19,6 +19,7 @@ if hasher.hexdigest() != DIGEST:
 with httpx.Client(timeout=120) as client:
     with client.stream("POST", "http://127.0.0.1:11435/api/create", json={
         "model": MODEL, "files": {"gemma-4-E2B-it.Q2_K.gguf": "sha256:" + DIGEST},
+        "renderer":"gemma4-small", "parser":"gemma4",
         "parameters": {"num_ctx": 8192, "temperature": 0}, "stream": True}) as response:
         response.raise_for_status()
         for line in response.iter_lines():

@@ -1,9 +1,11 @@
 import argparse
 import logging
 import time
+from threading import Event, Thread
 
 from .config import Settings
-from .storage import make_engine
+from .storage import SystemSettingRow, make_engine, sessions
+from .core.contracts import utcnow
 from .services.jobs import JobService, purge_expired
 
 
@@ -14,6 +16,16 @@ def main():
     settings = Settings.from_env()
     engine = make_engine(settings.database_url)
     jobs = JobService(engine, settings)
+    stop_heartbeat = Event()
+    def heartbeat():
+        while not stop_heartbeat.is_set():
+            try:
+                with sessions(engine).begin() as db:
+                    db.merge(SystemSettingRow(key="worker_heartbeat", value={"timestamp": utcnow().isoformat()}))
+            except Exception:
+                pass
+            stop_heartbeat.wait(10)
+    Thread(target=heartbeat, daemon=True).start()
     last_purge = 0
     while True:
         try:
@@ -30,6 +42,7 @@ def main():
             break
         if not worked:
             time.sleep(2)
+    stop_heartbeat.set()
 
 
 if __name__ == "__main__":

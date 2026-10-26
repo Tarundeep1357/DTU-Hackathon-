@@ -2,7 +2,8 @@ from collections.abc import Callable
 
 from evidence_arena.config import Settings
 from evidence_arena.core.compare import check_edge
-from evidence_arena.core.contracts import Analysis, ChallengeEvent, ClaimResponse, EvidenceResponse, Status
+from evidence_arena.core.contracts import Analysis, ChallengeEvent, ClaimResponse, EvidenceResponse, EvidenceEdge, ProposalResponse, Status
+from evidence_arena.core.facets import derive_facets
 from evidence_arena.core.gap_engine import gap_for
 from evidence_arena.core.retrieval import retrieve
 from evidence_arena.core.templates import TEMPLATES
@@ -55,11 +56,14 @@ def run_analysis(question, sources, passages, settings: Settings, *, claims=None
     progress(35, "Gemma 4 is reviewing candidate evidence")
     if sum(len(p["text"]) for bundle in bundles for p in bundle["passages"]) > 24000:
         raise ModelError("Candidate evidence exceeds the local model context budget; narrow the question or documents")
-    response = client.generate(EvidenceResponse, "Classify supplied candidate passages for each claim. Return at most 3 material evidence edges per claim; include both supporting and opposing evidence when present, and at most one context edge. Skip irrelevant passages. Copy a concise exact quotation that contains all comparison facts. Provide grounded facets. Set gaps to an empty array: the application will generate discriminating tests from the validated claims. Do not issue verdicts.",
+    response = client.generate(ProposalResponse, "Classify supplied candidate passages for each claim. Return at most 3 material evidence edges per claim; include both supporting and opposing evidence when present, and at most one context edge. Skip irrelevant passages. Copy one concise exact quotation containing the numeric value, metric, site and date where relevant. Do not provide verdicts or explanations. Evidence about another period is context, not opposition. Equipment installation alone is context, not proof of measured output.",
                                {"question": question, "bundles": bundles, "gap_guidance": TEMPLATES.get(domain, {}).get("gap_prompt", "")}, max_tokens=6500)
     lookup, claim_lookup = {p.passage_id: p for p in passages}, {c.claim_id: c for c in claims}
     checked = []
-    for edge in response.evidence:
+    for proposal in response.evidence:
+        if proposal.claim_id not in claim_lookup:
+            raise ModelError("Model referenced an unknown claim; no analysis was accepted")
+        edge = proposal if isinstance(proposal,EvidenceEdge) else EvidenceEdge(**proposal.model_dump(),facets=derive_facets(claim_lookup[proposal.claim_id].facets,proposal.quote))
         if edge.claim_id not in claim_lookup:
             raise ModelError("Model referenced an unknown claim; no analysis was accepted")
         check = check_edge(claim_lookup[edge.claim_id], edge, lookup)
@@ -73,7 +77,7 @@ def run_analysis(question, sources, passages, settings: Settings, *, claims=None
     progress(80, "Applying evidence rules and generating the challenge trail")
     incomplete = any(any("not reliably extracted" in w or "replacement characters" in w for w in s.warnings) for s in sources)
     verdicts = [adjudicate(c, checked, inspected[c.claim_id], extraction_incomplete=incomplete) for c in claims]
-    gaps_by_id = {g.claim_id: g for g in response.gaps if g.claim_id in claim_lookup}
+    gaps_by_id = {g.claim_id: g for g in getattr(response,"gaps",[]) if g.claim_id in claim_lookup}
     gaps = [gaps_by_id.get(v.claim_id) or gap_for(claim_lookup[v.claim_id], domain) for v in verdicts if v.status in {Status.CONTESTED, Status.UNVERIFIED}]
     for v in verdicts:
         trail.append(ChallengeEvent(operation="rule_adjudication", input_ids=[v.claim_id], result=f"{v.status.value}: {v.reasoning}"))

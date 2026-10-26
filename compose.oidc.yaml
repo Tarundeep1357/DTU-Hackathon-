@@ -1,0 +1,11 @@
+services:
+  app:
+    environment:
+      EA_OIDC_METADATA_URL: http://keycloak.localhost:8080/realms/evidence/.well-known/openid-configuration
+      EA_OIDC_CLIENT_ID: evidence-arena
+      EA_OIDC_CLIENT_SECRET: development-only-replace-before-sharing
+      EA_PUBLIC_URL: http://127.0.0.1:8501
+    depends_on:
+      keycloak:
+        condition: service_started
+

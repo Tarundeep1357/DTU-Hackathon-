@@ -2,10 +2,13 @@
 import json
 from pathlib import Path
 import time
+import argparse
 
 import httpx
 
-MODEL = "hf.co/mradermacher/gemma-4-E2B-it-GGUF:Q2_K"
+parser=argparse.ArgumentParser()
+parser.add_argument("--model",default="gemma4:e2b-it-qat")
+MODEL = parser.parse_args().model
 last, last_percent = "", -1
 with httpx.Client(timeout=httpx.Timeout(30, read=45)) as client:
     with client.stream("POST", "http://127.0.0.1:11435/api/pull", json={"model": MODEL, "stream": True}) as response:

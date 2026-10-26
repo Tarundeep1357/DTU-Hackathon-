@@ -37,6 +37,13 @@ class JobService:
             db.add(job)
             return job.id
 
+    def store_completed(self,owner,kind,result):
+        with self.session.begin() as db:
+            job=JobRow(id=uid("J"),owner_key=owner,kind=kind,state="completed",payload={},result=result,
+                       progress=100,message="Approved source draft",expires_at=utcnow()+timedelta(hours=24))
+            db.add(job)
+            return job.id
+
     def get(self, owner, job_id):
         with self.session() as db:
             job = db.get(JobRow, job_id)
@@ -137,6 +144,8 @@ class JobService:
                                       [Passage.model_validate(p) for p in payload["passages"]], self.settings,
                                       claims=[Claim.model_validate(c) for c in payload["claims"]] if payload.get("claims") else None,
                                       domain=payload.get("domain", "programme-audit"), progress=progress).model_dump(mode="json")
+                if payload.get("with_sources"):
+                    result={"analysis":result,"source_bytes":payload.get("source_bytes",{})}
             else:
                 hosts = CaseService(self.engine, self.settings).allowed_hosts()
                 doc = fetch_document(payload["url"], hosts, self.settings.max_file_mb * 1024 * 1024)

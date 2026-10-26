@@ -1,0 +1,6 @@
+FROM gemma4:e2b-q2-local
+RENDERER gemma4-small
+PARSER gemma4
+PARAMETER num_ctx 8192
+PARAMETER temperature 0
+PARAMETER stop <turn|>

@@ -11,4 +11,6 @@ coverage.xml
 .coverage
 test-results/
 .remote-check/
+frontend/node_modules/
+frontend/dist/
 

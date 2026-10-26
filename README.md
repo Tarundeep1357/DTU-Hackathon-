@@ -1,6 +1,6 @@
 # Evidence Arena 2.0
 
-An evidence review backend with a Streamlit client. Gemma 4 proposes claims and passage relationships; deterministic validation and comparison rules determine source-scoped findings. The original `dd.docx` specification is preserved.
+An evidence review backend with a React and TypeScript client served by FastAPI. Gemma 4 proposes claims and passage relationships; deterministic validation and comparison rules determine source-scoped findings. The original `dd.docx` specification is preserved. The older Streamlit client remains available as a reference; it is no longer the default interface.
 
 ## Local startup on Windows
 
@@ -12,11 +12,11 @@ Copy-Item .env.example .env   # Skip if .env is already configured
 .\start.ps1
 ```
 
-The app is at http://127.0.0.1:8501. `start.ps1` starts the worker, optionally starts the project-local Ollama runtime on port 11435, and launches Streamlit. It stops its worker when the foreground app exits. For manual control:
+The React app is at http://127.0.0.1:8501. `start.ps1` starts the worker, optionally starts the project-local Ollama runtime on port 11435, builds React if needed, and launches FastAPI. It stops its worker when the foreground app exits. For manual control:
 
 ```powershell
 .\.venv\Scripts\python.exe -m evidence_arena.worker
-.\.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1
+.\.venv\Scripts\python.exe -m uvicorn evidence_arena.api:app --host 127.0.0.1 --port 8501
 ```
 
 Guest draft analysis is available without an account. Saving and sharing cases requires OIDC. The fictional walkthrough never makes a model request and is clearly labelled.
@@ -56,7 +56,9 @@ For a remote OpenAI-compatible Gemma provider, set its HTTPS base URL ending in 
 - `storage.py`: SQLAlchemy records; `alembic/`: explicit schema migrations.
 - `worker.py`: leased jobs, progress, cancellation, interruption recovery and scheduled retention cleanup.
 
-The Python service interface is the backend API. A separate public HTTP API is not included. This keeps model credentials and case operations server-side.
+`evidence_arena/api.py` provides the React HTTP API. Signed HTTP-only sessions, CSRF tokens, OIDC identity validation, owner-scoped jobs, and service-level case permissions protect writes. Browser-authored passages are ignored: analysis, saves, and exports resolve source evidence from server-owned job results, the prepared fixture, or authorized saved cases. Model credentials stay server-side.
+
+For frontend development, run the API on port 8502, then `cd frontend; npm install; npm run dev`. Vite proxies `/api` and `/auth`. Production uses `npm run build` and serves `frontend/dist` directly from FastAPI.
 
 ## OCR
 
@@ -64,7 +66,7 @@ PyMuPDF includes the OCR integration; it needs English Tesseract language data. 
 
 ## OIDC and saved cases
 
-Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and configure your provider's discovery URL, client credentials, redirect URI and a random cookie secret. Use `http://localhost:8501/oauth2callback` for loopback development. Production requires HTTPS and provider registration. Identity is keyed by issuer plus subject, not email. Never commit secrets.
+For React, configure `EA_PUBLIC_URL`, `EA_OIDC_METADATA_URL`, `EA_OIDC_CLIENT_ID`, `EA_OIDC_CLIENT_SECRET`, and a strong `EA_SESSION_SECRET` in `.env`. The registered callback is `EA_PUBLIC_URL/auth/callback`. The default is `http://127.0.0.1:8501/auth/callback`. Production requires HTTPS and provider registration. Identity is keyed by issuer plus subject, not email. Never commit secrets. If `EA_SESSION_SECRET` is absent, local startup creates an ignored key in `data/session-secret.txt`.
 
 Case owners can add existing signed-in users by their user ID as reviewers/viewers, remove them, and delete cases. Reviewers can save versions and annotations; viewers can inspect/export accessible data. Overrides require a claim and reason and remain separate from computed verdicts. Concurrent saves require the expected version and fail rather than overwrite another review.
 
@@ -82,10 +84,10 @@ Set `POSTGRES_PASSWORD` and `KEYCLOAK_ADMIN_PASSWORD` in `.env` (random URL-safe
 docker compose up --build -d db migrate app worker
 ```
 
-For local OIDC, copy `deploy/secrets.dev.toml.example` to `.streamlit/secrets.toml`, replace the cookie secret, and run:
+For React with local OIDC, run the development override:
 
 ```powershell
-docker compose --profile oidc-dev up --build -d
+docker compose -f compose.yaml -f compose.oidc.yaml --profile oidc-dev up --build -d
 ```
 
 Keycloak is reachable at http://keycloak.localhost:8080 and imports the `evidence` realm. Its Docker network alias lets the app resolve the same issuer hostname as the browser. Register a local test user using the provider's registration page. The included client secret is **development only**; replace it and configure HTTPS before exposing any service. Only app/OIDC ports are bound, and both use loopback.

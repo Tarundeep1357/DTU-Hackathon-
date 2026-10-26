@@ -19,7 +19,12 @@ if (-not $SkipModel -and (Test-Path -LiteralPath $taskOllama)) {
 }
 $taskWorker = Start-Process -FilePath $taskPython -ArgumentList '-m evidence_arena.worker' -WorkingDirectory $PSScriptRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput 'data\worker.out.log' -RedirectStandardError 'data\worker.err.log'
 try {
-    & $taskPython -m streamlit run app.py --server.address 127.0.0.1
+    if (-not (Test-Path -LiteralPath 'frontend\dist\index.html')) {
+        Push-Location frontend
+        try { & npm.cmd install --no-audit --no-fund; & npm.cmd run build } finally { Pop-Location }
+        if ($LASTEXITCODE -ne 0) { throw 'React build failed' }
+    }
+    & $taskPython -m uvicorn evidence_arena.api:app --host 127.0.0.1 --port 8501
 } finally {
     if (-not $taskWorker.HasExited) { Stop-Process -Id $taskWorker.Id }
 }

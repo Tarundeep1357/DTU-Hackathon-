@@ -21,7 +21,7 @@ def main():
     print("Live Gemma 4 structured smoke passed", flush=True)
     fixture, files = sample_case(settings)
     analysis = run_analysis(fixture.question, fixture.sources, fixture.passages, settings,
-                            claims=fixture.claims, progress=lambda p, message: print(p, message, flush=True))
+                            progress=lambda p, message: print(p, message, flush=True))
     report["live_verdicts"] = {v.claim_id: v.status.value for v in analysis.verdicts}
     report["valid_citations"] = sum(e.citation_valid for e in analysis.edges)
     report["rejected_citations"] = sum(not e.citation_valid for e in analysis.edges)
